@@ -1,9 +1,16 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
-
-interface Props {}
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "../reducers";
+// import {} from "../types";
+import { updateFilter } from "../actions";
 
 const Chart = () => {
+  const filter = useSelector((state: RootState) => state.filter);
+  const dispatch = useDispatch();
+
+  // dispatch(updateFilter(null | string));
+
   return (
     <View style={styles.container}>
       <Text>Chart Page</Text>

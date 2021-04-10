@@ -1,17 +1,28 @@
-export const increment = (num: number) => {
+import { MapDataType, FilterType } from "../types";
+
+export const dataFetched = () => {
   return {
-    type: "increment",
+    type: "dataFetched",
     payload: {
-      size: num,
+      fetched: true,
     },
   };
 };
 
-export const dataFetched = () => {
+export const mapInitialise = (mapData: MapDataType) => {
   return {
-    type: "data-fetched",
+    type: "initial",
     payload: {
-      fetched: true,
+      data: mapData,
+    },
+  };
+};
+
+export const updateFilter = (newFilter: FilterType) => {
+  return {
+    type: "filterMap",
+    payload: {
+      filter: newFilter,
     },
   };
 };

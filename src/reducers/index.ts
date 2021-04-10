@@ -1,10 +1,12 @@
 import { combineReducers } from "redux";
-import counterReducer from "./counter";
 import fetchedReducer from "./fetched";
+import initialiseMapReducer from "./initialiseMap";
+import filterChosenReducer from "./filterChosen";
 
 const allReducers = combineReducers({
-  counter: counterReducer,
   fetched: fetchedReducer,
+  initialiseMap: initialiseMapReducer,
+  filter: filterChosenReducer,
 });
 
 export default allReducers;

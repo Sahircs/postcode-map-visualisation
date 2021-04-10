@@ -5,7 +5,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 // Components
-import Map from "./src/components/Map";
+import MapPage from "./src/components/MapPage";
 import Chart from "./src/components/Chart";
 // redux-stuff
 import { createStore, compose } from "redux";
@@ -27,7 +27,7 @@ export default function App() {
         <Tab.Navigator initialRouteName="map" activeColor="black">
           <Tab.Screen
             name="map"
-            component={Map}
+            component={MapPage}
             options={{
               tabBarLabel: "Map",
               tabBarIcon: ({ color }) => (

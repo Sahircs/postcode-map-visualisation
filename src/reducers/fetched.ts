@@ -1,14 +1,9 @@
-interface Action {
-  type: string;
-  payload: {
-    fetched: Boolean;
-  };
-}
+import { FetchedAction } from "../types";
 
-const fetchedReducer = (state: boolean = false, action: Action) => {
+const fetchedReducer = (state: boolean = false, action: FetchedAction) => {
   switch (action.type) {
-    case "data-fetched":
-        return action.payload.fetched;
+    case "dataFetched":
+      return action.payload.fetched;
     default:
       return state;
   }
