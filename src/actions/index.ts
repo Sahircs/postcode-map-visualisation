@@ -1,4 +1,4 @@
-import { MapDataType, FilterType } from "../types";
+import { MapDataType, FilterType, LatLng } from "../types";
 
 export const dataFetched = () => {
   return {
@@ -23,6 +23,15 @@ export const updateFilter = (newFilter: FilterType) => {
     type: "filterMap",
     payload: {
       filter: newFilter,
+    },
+  };
+};
+
+export const zoomIn = (coordinate: LatLng) => {
+  return {
+    type: "zoomIn",
+    payload: {
+      data: coordinate,
     },
   };
 };

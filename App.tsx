@@ -11,6 +11,7 @@ import Chart from "./src/components/Chart";
 import { createStore, compose } from "redux";
 import { Provider } from "react-redux";
 import allReducers from "./src/reducers";
+// import { fetchMapData } from "./fetchMapData";
 
 // STORE
 const composeEnhancers = // for redux-dev-tool
@@ -20,7 +21,7 @@ let store = createStore(allReducers, composeEnhancers());
 
 const Tab = createMaterialBottomTabNavigator();
 
-export default function App() {
+const App = () => {
   return (
     <Provider store={store}>
       <NavigationContainer>
@@ -49,6 +50,7 @@ export default function App() {
       </NavigationContainer>
     </Provider>
   );
-}
+};
 
 const styles = StyleSheet.create({});
+export default App;

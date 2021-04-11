@@ -5,7 +5,7 @@ const fetchedReducer = (state: boolean = false, action: FetchedAction) => {
     case "dataFetched":
       return action.payload.fetched;
     default:
-      return state;
+      return false;
   }
 };
 

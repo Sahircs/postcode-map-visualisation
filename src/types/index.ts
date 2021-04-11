@@ -16,6 +16,13 @@ export type MapDataType = Map<string, PostcodeMarkerData[]> | null;
 
 export type FilterType = string | null;
 
+export interface CenterPointZoom {
+  latitude: number;
+  longitude: number;
+  latitudeDelta: number;
+  longitudeDelta: number;
+}
+
 // Actions
 
 export interface InitialiseMapAction {
@@ -39,11 +46,9 @@ export interface FilterAction {
   };
 }
 
-// Others
-
-export interface CenterPointZoom {
-  latitude: number;
-  longitude: number;
-  latitudeDelta: number;
-  longitudeDelta: number;
+export interface UpdateCenterZoom {
+  type: string;
+  payload: {
+    data: LatLng;
+  };
 }

@@ -10,181 +10,129 @@ import {
   PostcodeMarkerData,
   CenterPointZoom,
 } from "../types";
-import { mapInitialise } from "../actions";
+import { dataFetched, mapInitialise, zoomIn } from "../actions";
 
 const MapPage = () => {
+  const centerZoomPoint = useSelector(
+    (state: RootState) => state.centerZoomPoint
+  );
   const initialiseMap = useSelector((state: RootState) => state.initialiseMap);
-  // const fetched = useSelector((state: RootState) => state.fetched);
-  const filter = useSelector((state: RootState) => state.filter);
+  const fetched = useSelector((state: RootState) => state.fetched);
+  // const filter = useSelector((state: RootState) => state.filter);
   const dispatch = useDispatch();
 
+  console.log("----------------------------------------------");
+
   useEffect(() => {
-    // App.tsx ??? -> Test uef in app when you change pages etc..
-    fetch(
-      "https://raw.githubusercontent.com/sjwhitworth/london_geojson/master/london_postcodes.json"
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        const dataMap: MapDataType = new Map([
-          ["N", []],
-          ["NW", []],
-          ["S", []],
-          ["SW", []],
-          ["E", []],
-          ["EC", []],
-          ["W", []],
-          ["WC", []],
-        ]);
+    if (!fetched) {
+      const dataMap: MapDataType = new Map([
+        ["N", []],
+        ["NW", []],
+        ["SW", []],
+        ["SE", []],
+        ["E", []],
+        ["EC", []],
+        ["W", []],
+        ["WC", []],
+      ]);
 
-        for (let index in data.features) {
-          let psInfo = data.features[index];
-          let name: string = psInfo.properties["Name"];
-          let arrayOfLocations: LatLng[] = [];
+      fetch(
+        "https://raw.githubusercontent.com/sjwhitworth/london_geojson/master/london_postcodes.json"
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          for (let index in data.features) {
+            let postcodeInfo = data.features[index];
+            let name: string = postcodeInfo.properties["Name"];
+            let arrayOfLocations: LatLng[] = [];
 
-          for (let index in psInfo.geometry.coodinates) {
-            let coord = psInfo.geometry.coordinates[index];
-            arrayOfLocations.push({
-              latitude: parseInt(coord[0]),
-              longitude: parseInt(coord[1]),
-            });
+            let coordinates = postcodeInfo.geometry.coordinates[0];
+
+            for (let index in coordinates) {
+              let coord = coordinates[index];
+              arrayOfLocations.push({
+                latitude: parseFloat(coord[1]),
+                longitude: parseFloat(coord[0]),
+              });
+            }
+
+            let postcodeMarkerObj: PostcodeMarkerData = {
+              coords: arrayOfLocations,
+              title: postcodeInfo.properties["Name"],
+              description: postcodeInfo.properties["Description"],
+              pinColor: "dodgerblue",
+            };
+
+            let mapKey = "";
+
+            if (name[1] == "E" || name[1] == "W" || name[1] == "C") {
+              mapKey = name.substring(0, 2);
+            } else {
+              mapKey = name.substring(0, 1);
+            }
+
+            let currentMapValue = dataMap.get(mapKey);
+            dataMap.set(mapKey, [...currentMapValue!, postcodeMarkerObj]);
           }
 
-          let postcodeMarkerObj: PostcodeMarkerData = {
-            coords: arrayOfLocations,
-            title: psInfo.properties.name,
-            description: psInfo.properties.description,
-            pinColor: "dodgerblue",
-          };
-
-          let mapKey = "";
-
-          if (name[1] != "E" && name[1] != "W" && name[1] != "C") {
-            mapKey = name.substring(0, 2);
-          } else {
-            mapKey = name.substring(0, 1);
-          }
-
-          let currentMapValue = dataMap.get(mapKey);
-          // dataMap.set(mapKey, currentMapValue?.push(postcodeMarkerObj));
-          dataMap.set(mapKey, [...currentMapValue!, postcodeMarkerObj]);
-        }
-
-        dispatch(mapInitialise(dataMap));
-      });
+          dispatch(mapInitialise(dataMap));
+          dispatch(dataFetched());
+        });
+    }
   }, []);
 
-  // let data = new Map<string, PostcodeMarkerData[]>();
-  // data.set("NW", [
-  //   {
-  //     coords: { latitude: 51.49493, longitude: 0.14619 },
-  //     title: "LDN",
-  //     description: "Buckingham Palace",
-  //     pinColor: "dodgerblue",
-  //   },
-  //   {
-  //     coords: { latitude: 51.49493, longitude: -0.54519 },
-  //     title: "LDN",
-  //     description: "description2...",
-  //     pinColor: "yellow",
-  //   },
-  //   {
-  //     coords: { latitude: 51.49493, longitude: -0.19919 },
-  //     title: "LDN",
-  //     description: "description3...",
-  //     pinColor: "green",
-  //   },
-  // ]);
-
-  // data.set("SW", [
-  //   {
-  //     coords: { latitude: 51.9993, longitude: 0.24619 },
-  //     title: "LDN",
-  //     description: "Buckingham Palace",
-  //     pinColor: "dodgerblue",
-  //   },
-  //   {
-  //     coords: { latitude: 51.49493, longitude: -0.54519 },
-  //     title: "LDN",
-  //     description: "description2...",
-  //     pinColor: "yellow",
-  //   },
-  //   {
-  //     coords: { latitude: 51.49493, longitude: -0.19919 },
-  //     title: "LDN",
-  //     description: "description3...",
-  //     pinColor: "green",
-  //   },
-  // ]);
-
-  const [centerPointZoom, setCenterPointZoom] = useState<CenterPointZoom>({
-    latitude: 51.507351,
-    longitude: -0.127758,
-    latitudeDelta: 0.715,
-    longitudeDelta: 0.7121,
-  });
-
-  // const PostcodeMarkerData = data.get("NW");
-
-  // let keys = Array.from(data.keys());
-
-  return (
-    <View style={styles.container}>
-      <Text>Map Page</Text>
-      {/* {k.map((area) =>
-        data.get(area)?.map((obj) => <Text>{obj.pinColor}</Text>)
-      )} */}
-      <View style={styles.separator} />
-      <TouchableOpacity>
-        <Button
-          title="Change Focus & Zoom"
-          onPress={() =>
-            setCenterPointZoom({
-              latitude: 51.49493,
-              longitude: -0.19919,
-              latitudeDelta: 0.315,
-              longitudeDelta: 0.3121,
-            })
-          }
-        />
-      </TouchableOpacity>
-      {/* Search Bar goes here.. */}
-      <View style={styles.mapContainer}>
-        <MapView
-          provider={PROVIDER_GOOGLE}
-          style={styles.map}
-          region={centerPointZoom}
-          zoomEnabled
-          zoomTapEnabled
-        >
-          {/* Display Markers */}
-          {/* {keys.map((area) =>
-            data
-              .get(area)
-              ?.map((markerObj, index) => (
-                <Marker
-                  key={`${index}`}
-                  coordinate={markerObj.coords}
-                  title={markerObj.title}
-                  description={markerObj.description}
-                  pinColor={markerObj.pinColor}
-                />
-              ))
-          )} */}
-          {/* {PostcodeMarkerData?.map((markerObj, index) => {
-            return (
-              <Marker
-                key={`${index}`}
-                coordinate={markerObj.coords}
-                title={markerObj.title}
-                description={markerObj.description}
-                pinColor={markerObj.pinColor}
-              />
-            );
-          })} */}
-        </MapView>
+  if (!fetched || !initialiseMap) {
+    return <Text>Data being fetched...</Text>;
+  } else {
+    const areaKeys = Array.from(initialiseMap.keys());
+    return (
+      <View style={styles.container}>
+        <Text>Map Page</Text>
+        <View style={styles.separator} />
+        {/* <TouchableOpacity>
+          <Button
+            title="Change Focus & Zoom"
+            onPress={() =>
+              setCenterPointZoom({
+                latitude: 51.49493,
+                longitude: -0.19919,
+                latitudeDelta: 0.315,
+                longitudeDelta: 0.3121,
+              })
+            }
+          />
+        </TouchableOpacity> */}
+        {/* Search Bar goes here.. */}
+        <View style={styles.mapContainer}>
+          <MapView
+            provider={PROVIDER_GOOGLE}
+            style={styles.map}
+            region={centerZoomPoint}
+            zoomEnabled
+            zoomTapEnabled
+          >
+            {/* Display Markers */}
+            {areaKeys.map((area) => {
+              return initialiseMap.get(area)?.map((postcodeObj) => {
+                return postcodeObj.coords.map((markerCoords, index) => {
+                  return (
+                    <Marker
+                      key={postcodeObj.title + index}
+                      coordinate={markerCoords}
+                      title={postcodeObj.title}
+                      description={postcodeObj.description}
+                      pinColor={postcodeObj.pinColor}
+                      // onPress={() => dispatch(zoomIn(markerCoords))}
+                    />
+                  );
+                });
+              });
+            })}
+          </MapView>
+        </View>
       </View>
-    </View>
-  );
+    );
+  }
 };
 
 const styles = StyleSheet.create({
