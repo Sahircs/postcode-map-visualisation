@@ -1,16 +1,12 @@
 import { CenterPointZoom, UpdateCenterZoom } from "../types";
 
 const centerZoomReducer = (
-  state: CenterPointZoom | null = null,
+  state: CenterPointZoom, // | null = null,
   action: UpdateCenterZoom
 ) => {
   switch (action.type) {
     case "zoomIn":
-      return {
-        ...action.payload.data,
-        latitudeDelta: 0.55,
-        longitudeDelta: 0.55,
-      };
+      return action.payload.data;
     default:
       return {
         latitude: 51.507351,

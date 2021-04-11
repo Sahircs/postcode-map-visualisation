@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { View, Text, StyleSheet, Button } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useSelector, useDispatch } from "react-redux";
@@ -10,21 +10,23 @@ import {
   PostcodeMarkerData,
   CenterPointZoom,
 } from "../types";
-import { dataFetched, mapInitialise, zoomIn } from "../actions";
+import { dataFetched, mapInitialise, updateFilter, zoomIn } from "../actions";
 
 const MapPage = () => {
-  const centerZoomPoint = useSelector(
+  const centerZoomPoint: CenterPointZoom = useSelector(
     (state: RootState) => state.centerZoomPoint
   );
-  const initialiseMap = useSelector((state: RootState) => state.initialiseMap);
-  const fetched = useSelector((state: RootState) => state.fetched);
-  // const filter = useSelector((state: RootState) => state.filter);
+  const fetched: boolean = useSelector((state: RootState) => state.fetched);
+  const initialiseMap: MapDataType = useSelector(
+    (state: RootState) => state.initialiseMap
+  );
+  const filter: string = useSelector((state: RootState) => state.filter);
   const dispatch = useDispatch();
 
   console.log("----------------------------------------------");
 
   useEffect(() => {
-    if (!fetched) {
+    if (!filter && !initialiseMap) {
       const dataMap: MapDataType = new Map([
         ["N", []],
         ["NW", []],
@@ -78,17 +80,54 @@ const MapPage = () => {
           dispatch(mapInitialise(dataMap));
           dispatch(dataFetched());
         });
+      // dispatch(dataFetched());
     }
-  }, []);
+  }, [fetched]);
+
+  const handleLocationZoom = (markerCoords: LatLng) => {
+    // console.log({
+    //   ...markerCoords,
+    //   latitudeDelta: 0.55,
+    //   longitudeDelta: 0.5121,
+    // });
+    dispatch(
+      zoomIn({
+        ...markerCoords,
+        latitudeDelta: 0.55,
+        longitudeDelta: 0.5121,
+      })
+    );
+    console.log(centerZoomPoint);
+    dispatch(dataFetched());
+  };
 
   if (!fetched || !initialiseMap) {
-    return <Text>Data being fetched...</Text>;
+    return (
+      <View style={styles.container}>
+        <Text>Data being fetched...</Text>
+        {/* <Text>{filter ? filter : "No Filter Applied"}</Text>
+        <Text>{fetched ? fetched : "Still Fetching..."}</Text>
+        <Text>{initialiseMap ? "Map initialised" : "Not initialised"}</Text> */}
+      </View>
+    );
   } else {
     const areaKeys = Array.from(initialiseMap.keys());
+    let areaSpecificData: PostcodeMarkerData[] | null = null;
+
+    if (filter) {
+      areaSpecificData = initialiseMap.get(filter)!;
+    }
+
     return (
       <View style={styles.container}>
         <Text>Map Page</Text>
         <View style={styles.separator} />
+        <Text>{filter ? filter : "No Filter"}</Text>
+        <Text>
+          {centerZoomPoint.latitudeDelta +
+            " | " +
+            centerZoomPoint.longitudeDelta}
+        </Text>
         {/* <TouchableOpacity>
           <Button
             title="Change Focus & Zoom"
@@ -112,22 +151,37 @@ const MapPage = () => {
             zoomTapEnabled
           >
             {/* Display Markers */}
-            {areaKeys.map((area) => {
-              return initialiseMap.get(area)?.map((postcodeObj) => {
-                return postcodeObj.coords.map((markerCoords, index) => {
-                  return (
-                    <Marker
-                      key={postcodeObj.title + index}
-                      coordinate={markerCoords}
-                      title={postcodeObj.title}
-                      description={postcodeObj.description}
-                      pinColor={postcodeObj.pinColor}
-                      // onPress={() => dispatch(zoomIn(markerCoords))}
-                    />
-                  );
-                });
-              });
-            })}
+            {areaSpecificData
+              ? areaSpecificData!.map((postcodeObj) => {
+                  return postcodeObj.coords.map((markerCoords, index) => {
+                    return (
+                      <Marker
+                        key={postcodeObj.title + index}
+                        coordinate={markerCoords}
+                        title={postcodeObj.title}
+                        description={postcodeObj.description}
+                        pinColor={postcodeObj.pinColor}
+                        onPress={() => handleLocationZoom(markerCoords)}
+                      />
+                    );
+                  });
+                })
+              : areaKeys.map((area) => {
+                  return initialiseMap.get(area)?.map((postcodeObj) => {
+                    return postcodeObj.coords.map((markerCoords, index) => {
+                      return (
+                        <Marker
+                          key={postcodeObj.title + index}
+                          coordinate={markerCoords}
+                          title={postcodeObj.title}
+                          description={postcodeObj.description}
+                          pinColor={postcodeObj.pinColor}
+                          // onPress={() => handleLocationZoom(markerCoords)}
+                        />
+                      );
+                    });
+                  });
+                })}
           </MapView>
         </View>
       </View>

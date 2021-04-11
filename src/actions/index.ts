@@ -1,4 +1,4 @@
-import { MapDataType, FilterType, LatLng } from "../types";
+import { MapDataType, LatLng, CenterPointZoom } from "../types";
 
 export const dataFetched = () => {
   return {
@@ -18,7 +18,7 @@ export const mapInitialise = (mapData: MapDataType) => {
   };
 };
 
-export const updateFilter = (newFilter: FilterType) => {
+export const updateFilter = (newFilter: string | null) => {
   return {
     type: "filterMap",
     payload: {
@@ -27,11 +27,11 @@ export const updateFilter = (newFilter: FilterType) => {
   };
 };
 
-export const zoomIn = (coordinate: LatLng) => {
+export const zoomIn = (coordinateConfig: CenterPointZoom) => {
   return {
     type: "zoomIn",
     payload: {
-      data: coordinate,
+      data: coordinateConfig,
     },
   };
 };
