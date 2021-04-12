@@ -10,7 +10,7 @@ Used react-navigation for the Navigation Bars
 
 ---
 
-### Map Page
+## Map Page
 
 - Displayed Map with several Markers representing individual locations within a certain Postcode
 - Search Bar to allow searching for a particular postcode - if valid it would zoom in on that location
