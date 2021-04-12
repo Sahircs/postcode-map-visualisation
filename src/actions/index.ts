@@ -76,3 +76,12 @@ export const handleBtnDisable = (btnDisable: boolean) => {
     },
   };
 };
+
+export const handleInvalidSearch = (searchInvalid: boolean) => {
+  return {
+    type: "searchValidate",
+    payload: {
+      data: searchInvalid,
+    },
+  };
+};

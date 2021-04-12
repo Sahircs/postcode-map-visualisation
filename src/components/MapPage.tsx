@@ -1,5 +1,13 @@
 import React, { useEffect } from "react";
-import { View, Text, StyleSheet, Button, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Button,
+  TextInput,
+  SafeAreaView,
+  KeyboardAvoidingView,
+} from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../reducers";
@@ -20,7 +28,9 @@ import {
   zoomOut,
   handleTextChange,
   handleBtnDisable,
+  handleInvalidSearch,
 } from "../actions";
+import InvalidSearchAlert from "./InvalidSearchAlert";
 
 const MapPage = () => {
   const centerZoomPoint: CenterPointZoom = useSelector(
@@ -31,7 +41,7 @@ const MapPage = () => {
     (state: RootState) => state.dataHashMap
   );
   const filter: string | null = useSelector((state: RootState) => state.filter);
-  const searchPostcodeMap: SearchMap = useSelector(
+  const searchPostcodeMap: SearchMap | null = useSelector(
     (state: RootState) => state.searchPostcodeMap
   );
   const searchText: string = useSelector(
@@ -39,6 +49,9 @@ const MapPage = () => {
   );
   const buttonDisable: boolean = useSelector(
     (state: RootState) => state.buttonDisable
+  );
+  const invalidSearch: boolean = useSelector(
+    (state: RootState) => state.invalidSearch
   );
   const dispatch = useDispatch();
 
@@ -125,19 +138,8 @@ const MapPage = () => {
 
           dispatch(mapInitialise(dataMap));
           dispatch(updateSearchMap(mapSearch));
-          console.log(mapSearch);
-          console.log(searchPostcodeMap);
-          // dispatch(
-          //   zoomIn({
-          //     latitude: 51.507351,
-          //     longitude: -0.127758,
-          //     latitudeDelta: 0.55,
-          //     longitudeDelta: 0.5121,
-          //   })
-          // );
           dispatch(dataFetched());
         });
-      // dispatch(dataFetched());
     }
   }, []);
 
@@ -154,18 +156,14 @@ const MapPage = () => {
         })
       );
     } else {
-      zoomIn({
-        ...markerCoords!,
-        latitudeDelta: 0.15,
-        longitudeDelta: 0.1121,
-      });
+      dispatch(
+        zoomIn({
+          ...markerCoords!,
+          latitudeDelta: 0.15,
+          longitudeDelta: 0.1121,
+        })
+      );
     }
-  };
-
-  const handleResetZoom = () => {
-    console.log("Zooming Out");
-    dispatch(zoomOut());
-    console.log(centerZoomPoint);
   };
 
   const searchTextChange = (text: string) => {
@@ -190,9 +188,7 @@ const MapPage = () => {
     ) {
       mapKey = searchText.substring(0, 1);
     } else {
-      // Display some Alert text
-      submitBtnReset();
-      console.log("Not Valid Postcode");
+      submitBtnReset(true);
       return;
     }
 
@@ -201,17 +197,21 @@ const MapPage = () => {
         searchPostcodeMap?.get(mapKey)?.get(searchText)!,
         true
       );
-      submitBtnReset();
+      submitBtnReset(false);
     } else {
-      submitBtnReset();
-      console.log("Not Valid Postcode in Map");
+      submitBtnReset(true);
       return;
     }
   };
 
-  const submitBtnReset = () => {
+  const submitBtnReset = (searchInvalid: boolean) => {
     dispatch(handleTextChange(""));
     dispatch(handleBtnDisable(true));
+
+    if (searchInvalid) {
+      // Opens Alert
+      dispatch(handleInvalidSearch(true));
+    }
   };
 
   if (!fetched || !dataHashMap) {
@@ -232,34 +232,51 @@ const MapPage = () => {
     }
 
     return (
-      <View style={styles.container}>
-        <Text>Map Page</Text>
-        <View style={styles.separator} />
-        <Text>{searchText}</Text>
-        <Text>{buttonDisable ? "Button Disabled" : "Button not Disabled"}</Text>
-        <TextInput
-          style={styles.searchText}
-          placeholder="Enter a Postcode to Search Map"
-          placeholderTextColor="#9a73ef"
-          underlineColorAndroid="dodgerblue"
-          onChangeText={searchTextChange}
-          value={searchText}
-        />
-        <Button
-          title="Submit Search"
-          onPress={handlePostcodeSearch}
-          disabled={buttonDisable}
-        />
-        {/* <Text>
+      <SafeAreaView style={styles.container}>
+        {/* Header */}
+        <View style={styles.headerContainer}>
+          <Text style={{ fontSize: 16 }}>Map Page</Text>
+          <View style={styles.separator} />
+        </View>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchText}
+            placeholder="Enter a Postcode to Search Map"
+            placeholderTextColor="grey"
+            onChangeText={searchTextChange}
+            value={searchText}
+          />
+          <View style={{ height: -5, marginTop: 10 }}>
+            <Button
+              title="Submit Search"
+              onPress={handlePostcodeSearch}
+              disabled={buttonDisable}
+            />
+          </View>
+        </View>
+        {/* Alert if invalid postcode searched */}
+        {invalidSearch ? <InvalidSearchAlert /> : null}
+        {/* Text to display current Filter being applied */}
+        <Text>
           {filter
             ? "Map currently is filtered by Area: " + filter
             : "Map currently has no filter applied"}
-        </Text> */}
-        {/* <TouchableOpacity>
-          <Button title="Reset Map Filter" onPress={resetMapFilter} />
-          <Button title="Reset Zoom" onPress={() => dispatch(zoomOut())} />
-        </TouchableOpacity> */}
-        {/* Search Bar goes here.. */}
+        </Text>
+        {/* Buttons to reset the Zoom and filter */}
+        <TouchableOpacity>
+          <View style={styles.btnContainer}>
+            {filter ? (
+              <Button
+                title="Reset Map Filter"
+                onPress={() => dispatch(updateFilter(null))}
+              />
+            ) : null}
+            {centerZoomPoint.latitudeDelta != 0.55 ? (
+              <Button title="Reset Zoom" onPress={() => dispatch(zoomOut())} />
+            ) : null}
+          </View>
+        </TouchableOpacity>
         <View style={styles.mapContainer}>
           <MapView
             provider={PROVIDER_GOOGLE}
@@ -304,37 +321,60 @@ const MapPage = () => {
                 })}
           </MapView>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    height: "100%",
+    width: "100%",
     backgroundColor: "#fff",
+    flex: 1,
+    flexDirection: "column",
+    justifyContent: "center",
     alignItems: "center",
-    justifyContent: "space-between",
+    // alignContent: "space-around",
+  },
+  headerContainer: {
+    width: "100%",
+    marginTop: 40,
+    alignItems: "center",
   },
   separator: {
     marginVertical: 30,
     height: 1,
     width: "80%",
-    backgroundColor: "blue",
+    // backgroundColor: "dodgerblue",
+    backgroundColor: "black",
   },
-  mapContainer: {
-    // flex: 1,
-    height: 400,
+  searchContainer: {
     width: "100%",
-    // justifyContent: "flex-end",
-    // alignItems: "center",
-  },
-  map: {
-    // ...StyleSheet.absoluteFillObject,
-    flex: 1,
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-evenly",
+    marginBottom: 35, // 40 || 20
   },
   searchText: {
     height: 45,
+    borderColor: "dodgerblue",
+    borderBottomWidth: 1,
+  },
+  btnContainer: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    paddingVertical: 20,
+  },
+  mapContainer: {
+    height: 400,
+    width: "100%",
+  },
+  map: {
+    flex: 1,
   },
 });
 
