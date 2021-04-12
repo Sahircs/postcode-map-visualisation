@@ -2,9 +2,6 @@
 
 Mobile App that displays London Postcodes on a Map by Area and a Chart that dislays the distribution of Postcodes by Area.
 
-
-> **App has been published to Expo - [postcode-map-visualisation](https://expo.io/@sahir-tech/projects/postcode-map-visualisation)**
-
 **App has been published to Expo - [postcode-map-visualisation](https://expo.io/@sahir-tech/projects/postcode-map-visualisation)**
 
 
