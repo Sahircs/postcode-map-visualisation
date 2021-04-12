@@ -21,6 +21,8 @@ export interface CenterPointZoom {
   longitudeDelta: number;
 }
 
+export type SearchMap = Map<string, Map<string, LatLng> | null>;
+
 // Actions
 
 export interface InitialiseMapAction {
@@ -49,4 +51,25 @@ export interface UpdateCenterZoom {
   payload: {
     data: CenterPointZoom;
   };
+}
+
+export interface InitialiseSearchMap {
+  type: string;
+  payload: {
+    data: SearchMap;
+  };
+}
+
+export interface SearchTextActionType {
+  type: string,
+  payload: {
+    data: string 
+  }
+}
+
+export interface ButtonDisableActionType {
+  type: string,
+  payload: {
+    data: boolean
+  }
 }

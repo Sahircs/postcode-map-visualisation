@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, Text, StyleSheet, Button } from "react-native";
+import { View, Text, StyleSheet, Button, TextInput } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../reducers";
@@ -9,24 +9,43 @@ import {
   LatLng,
   PostcodeMarkerData,
   CenterPointZoom,
+  SearchMap,
 } from "../types";
-import { dataFetched, mapInitialise, updateFilter, zoomIn } from "../actions";
+import {
+  dataFetched,
+  mapInitialise,
+  updateFilter,
+  zoomIn,
+  updateSearchMap,
+  zoomOut,
+  handleTextChange,
+  handleBtnDisable,
+} from "../actions";
 
 const MapPage = () => {
   const centerZoomPoint: CenterPointZoom = useSelector(
     (state: RootState) => state.centerZoomPoint
   );
   const fetched: boolean = useSelector((state: RootState) => state.fetched);
-  const initialiseMap: MapDataType = useSelector(
-    (state: RootState) => state.initialiseMap
+  const dataHashMap: MapDataType = useSelector(
+    (state: RootState) => state.dataHashMap
   );
-  const filter: string = useSelector((state: RootState) => state.filter);
+  const filter: string | null = useSelector((state: RootState) => state.filter);
+  const searchPostcodeMap: SearchMap = useSelector(
+    (state: RootState) => state.searchPostcodeMap
+  );
+  const searchText: string = useSelector(
+    (state: RootState) => state.searchText
+  );
+  const buttonDisable: boolean = useSelector(
+    (state: RootState) => state.buttonDisable
+  );
   const dispatch = useDispatch();
 
   console.log("----------------------------------------------");
 
   useEffect(() => {
-    if (!filter && !initialiseMap) {
+    if (!fetched && !dataHashMap) {
       const dataMap: MapDataType = new Map([
         ["N", []],
         ["NW", []],
@@ -38,6 +57,17 @@ const MapPage = () => {
         ["WC", []],
       ]);
 
+      const mapSearch: SearchMap = new Map([
+        ["N", null],
+        ["NW", null],
+        ["SW", null],
+        ["SE", null],
+        ["E", null],
+        ["EC", null],
+        ["W", null],
+        ["WC", null],
+      ]);
+
       fetch(
         "https://raw.githubusercontent.com/sjwhitworth/london_geojson/master/london_postcodes.json"
       )
@@ -47,7 +77,6 @@ const MapPage = () => {
             let postcodeInfo = data.features[index];
             let name: string = postcodeInfo.properties["Name"];
             let arrayOfLocations: LatLng[] = [];
-
             let coordinates = postcodeInfo.geometry.coordinates[0];
 
             for (let index in coordinates) {
@@ -56,6 +85,8 @@ const MapPage = () => {
                 latitude: parseFloat(coord[1]),
                 longitude: parseFloat(coord[0]),
               });
+              // break added as every single location is unecessary & makes app slower
+              break; // Comment this line to see markers for every single location in every single postcode in London
             }
 
             let postcodeMarkerObj: PostcodeMarkerData = {
@@ -73,73 +104,160 @@ const MapPage = () => {
               mapKey = name.substring(0, 1);
             }
 
-            let currentMapValue = dataMap.get(mapKey);
-            dataMap.set(mapKey, [...currentMapValue!, postcodeMarkerObj]);
+            dataMap.set(mapKey, [...dataMap.get(mapKey)!, postcodeMarkerObj]);
+
+            if (!mapSearch.get(mapKey)) {
+              mapSearch.set(
+                mapKey,
+                new Map([
+                  [postcodeInfo.properties["Name"], arrayOfLocations[0]],
+                ])
+              );
+            } else {
+              const updatedMap: Map<string, LatLng> = new Map([
+                ...mapSearch.get(mapKey)!,
+                [postcodeInfo.properties["Name"], arrayOfLocations[0]],
+              ]);
+
+              mapSearch.set(mapKey, updatedMap);
+            }
           }
 
           dispatch(mapInitialise(dataMap));
+          dispatch(updateSearchMap(mapSearch));
+          console.log(mapSearch);
+          console.log(searchPostcodeMap);
+          // dispatch(
+          //   zoomIn({
+          //     latitude: 51.507351,
+          //     longitude: -0.127758,
+          //     latitudeDelta: 0.55,
+          //     longitudeDelta: 0.5121,
+          //   })
+          // );
           dispatch(dataFetched());
         });
       // dispatch(dataFetched());
     }
-  }, [fetched]);
+  }, []);
 
-  const handleLocationZoom = (markerCoords: LatLng) => {
-    // console.log({
-    //   ...markerCoords,
-    //   latitudeDelta: 0.55,
-    //   longitudeDelta: 0.5121,
-    // });
-    dispatch(
+  const handleLocationZoom = (
+    markerCoords: LatLng,
+    zoomInBySearch: boolean
+  ) => {
+    if (zoomInBySearch) {
+      dispatch(
+        zoomIn({
+          ...markerCoords!,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.0121,
+        })
+      );
+    } else {
       zoomIn({
-        ...markerCoords,
-        latitudeDelta: 0.55,
-        longitudeDelta: 0.5121,
-      })
-    );
-    console.log(centerZoomPoint);
-    dispatch(dataFetched());
+        ...markerCoords!,
+        latitudeDelta: 0.15,
+        longitudeDelta: 0.1121,
+      });
+    }
   };
 
-  if (!fetched || !initialiseMap) {
+  const handleResetZoom = () => {
+    console.log("Zooming Out");
+    dispatch(zoomOut());
+    console.log(centerZoomPoint);
+  };
+
+  const searchTextChange = (text: string) => {
+    dispatch(handleTextChange(text));
+
+    if (text && buttonDisable) {
+      dispatch(handleBtnDisable(false));
+    } else if (!text) {
+      dispatch(handleBtnDisable(true));
+    }
+  };
+
+  const handlePostcodeSearch = () => {
+    let mapKey: string | null = null;
+
+    if (searchText[1] == "E" || searchText[1] == "W" || searchText[1] == "C") {
+      mapKey = searchText.substring(0, 2);
+    } else if (
+      searchText[0] == "N" ||
+      searchText[0] == "E" ||
+      searchText[0] == "W"
+    ) {
+      mapKey = searchText.substring(0, 1);
+    } else {
+      // Display some Alert text
+      submitBtnReset();
+      console.log("Not Valid Postcode");
+      return;
+    }
+
+    if (searchPostcodeMap?.get(mapKey)?.has(searchText)!) {
+      handleLocationZoom(
+        searchPostcodeMap?.get(mapKey)?.get(searchText)!,
+        true
+      );
+      submitBtnReset();
+    } else {
+      submitBtnReset();
+      console.log("Not Valid Postcode in Map");
+      return;
+    }
+  };
+
+  const submitBtnReset = () => {
+    dispatch(handleTextChange(""));
+    dispatch(handleBtnDisable(true));
+  };
+
+  if (!fetched || !dataHashMap) {
     return (
       <View style={styles.container}>
-        <Text>Data being fetched...</Text>
-        {/* <Text>{filter ? filter : "No Filter Applied"}</Text>
+        {/* <Text>Data being fetched...</Text> */}
+        <Text>{filter ? filter : "No Filter Applied"}</Text>
         <Text>{fetched ? fetched : "Still Fetching..."}</Text>
-        <Text>{initialiseMap ? "Map initialised" : "Not initialised"}</Text> */}
+        <Text>{dataHashMap ? "Map initialised" : "Not initialised"}</Text>
       </View>
     );
   } else {
-    const areaKeys = Array.from(initialiseMap.keys());
+    const areaKeys = Array.from(dataHashMap.keys());
     let areaSpecificData: PostcodeMarkerData[] | null = null;
 
     if (filter) {
-      areaSpecificData = initialiseMap.get(filter)!;
+      areaSpecificData = dataHashMap.get(filter)!;
     }
 
     return (
       <View style={styles.container}>
         <Text>Map Page</Text>
         <View style={styles.separator} />
-        <Text>{filter ? filter : "No Filter"}</Text>
-        <Text>
-          {centerZoomPoint.latitudeDelta +
-            " | " +
-            centerZoomPoint.longitudeDelta}
-        </Text>
+        <Text>{searchText}</Text>
+        <Text>{buttonDisable ? "Button Disabled" : "Button not Disabled"}</Text>
+        <TextInput
+          style={styles.searchText}
+          placeholder="Enter a Postcode to Search Map"
+          placeholderTextColor="#9a73ef"
+          underlineColorAndroid="dodgerblue"
+          onChangeText={searchTextChange}
+          value={searchText}
+        />
+        <Button
+          title="Submit Search"
+          onPress={handlePostcodeSearch}
+          disabled={buttonDisable}
+        />
+        {/* <Text>
+          {filter
+            ? "Map currently is filtered by Area: " + filter
+            : "Map currently has no filter applied"}
+        </Text> */}
         {/* <TouchableOpacity>
-          <Button
-            title="Change Focus & Zoom"
-            onPress={() =>
-              setCenterPointZoom({
-                latitude: 51.49493,
-                longitude: -0.19919,
-                latitudeDelta: 0.315,
-                longitudeDelta: 0.3121,
-              })
-            }
-          />
+          <Button title="Reset Map Filter" onPress={resetMapFilter} />
+          <Button title="Reset Zoom" onPress={() => dispatch(zoomOut())} />
         </TouchableOpacity> */}
         {/* Search Bar goes here.. */}
         <View style={styles.mapContainer}>
@@ -161,13 +279,13 @@ const MapPage = () => {
                         title={postcodeObj.title}
                         description={postcodeObj.description}
                         pinColor={postcodeObj.pinColor}
-                        onPress={() => handleLocationZoom(markerCoords)}
+                        onPress={() => handleLocationZoom(markerCoords, false)}
                       />
                     );
                   });
                 })
               : areaKeys.map((area) => {
-                  return initialiseMap.get(area)?.map((postcodeObj) => {
+                  return dataHashMap.get(area)?.map((postcodeObj) => {
                     return postcodeObj.coords.map((markerCoords, index) => {
                       return (
                         <Marker
@@ -176,7 +294,9 @@ const MapPage = () => {
                           title={postcodeObj.title}
                           description={postcodeObj.description}
                           pinColor={postcodeObj.pinColor}
-                          // onPress={() => handleLocationZoom(markerCoords)}
+                          onPress={() =>
+                            handleLocationZoom(markerCoords, false)
+                          }
                         />
                       );
                     });
@@ -194,7 +314,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-between",
   },
   separator: {
     marginVertical: 30,
@@ -212,6 +332,9 @@ const styles = StyleSheet.create({
   map: {
     // ...StyleSheet.absoluteFillObject,
     flex: 1,
+  },
+  searchText: {
+    height: 45,
   },
 });
 

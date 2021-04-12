@@ -1,4 +1,4 @@
-import { MapDataType, LatLng, CenterPointZoom } from "../types";
+import { MapDataType, CenterPointZoom, SearchMap } from "../types";
 
 export const dataFetched = () => {
   return {
@@ -32,6 +32,47 @@ export const zoomIn = (coordinateConfig: CenterPointZoom) => {
     type: "zoomIn",
     payload: {
       data: coordinateConfig,
+    },
+  };
+};
+
+export const zoomOut = () => {
+  return {
+    type: "zoomOut",
+    payload: {
+      data: {
+        latitude: 51.507351,
+        longitude: -0.127758,
+        latitudeDelta: 0.55,
+        longitudeDelta: 0.5121,
+      },
+    },
+  };
+};
+
+export const updateSearchMap = (searchMap: SearchMap) => {
+  return {
+    type: "createMap",
+    payload: {
+      data: searchMap,
+    },
+  };
+};
+
+export const handleTextChange = (searchText: string) => {
+  return {
+    type: "textUpdate",
+    payload: {
+      data: searchText,
+    },
+  };
+};
+
+export const handleBtnDisable = (btnDisable: boolean) => {
+  return {
+    type: "btnDisableUpdate",
+    payload: {
+      data: btnDisable,
     },
   };
 };

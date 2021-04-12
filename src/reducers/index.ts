@@ -3,12 +3,18 @@ import fetchedReducer from "./fetched";
 import initialiseMapReducer from "./initialiseMap";
 import filterChosenReducer from "./filterChosen";
 import centerZoomReducer from "./centerZoom";
+import searchPostcodeMap from "./searchPostcodeMap";
+import searchTextReducer from "./searchText";
+import searchButtonDisableReducer from "./searchButtonDisable";
 
 const allReducers = combineReducers({
   fetched: fetchedReducer,
-  initialiseMap: initialiseMapReducer,
+  dataHashMap: initialiseMapReducer,
   filter: filterChosenReducer,
   centerZoomPoint: centerZoomReducer,
+  searchPostcodeMap: searchPostcodeMap,
+  searchText: searchTextReducer,
+  buttonDisable: searchButtonDisableReducer,
 });
 
 export default allReducers;

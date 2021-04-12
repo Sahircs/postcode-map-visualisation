@@ -74,8 +74,8 @@ const ScatterChart = ({ postcodeMapData, dispatch }: Props) => {
 
 const Chart = () => {
   const fetched: boolean = useSelector((state: RootState) => state.fetched);
-  const initialiseMap: MapDataType = useSelector(
-    (state: RootState) => state.initialiseMap
+  const dataHashMap: MapDataType = useSelector(
+    (state: RootState) => state.dataHashMap
   );
   const filter: string = useSelector((state: RootState) => state.filter);
   const dispatch = useDispatch();
@@ -88,7 +88,7 @@ const Chart = () => {
       {!fetched ? (
         <Text>Loading Data...</Text>
       ) : (
-        <ScatterChart postcodeMapData={initialiseMap} dispatch={dispatch} />
+        <ScatterChart postcodeMapData={dataHashMap} dispatch={dispatch} />
       )}
       <Text>
         {filter

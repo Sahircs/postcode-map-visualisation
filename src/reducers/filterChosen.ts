@@ -1,7 +1,7 @@
-import { FilterType, FilterAction } from "../types";
+import { FilterAction } from "../types";
 
 const filterChosenReducer = (
-  state: FilterType = null,
+  state: string | null = null,
   action: FilterAction
 ) => {
   switch (action.type) {
