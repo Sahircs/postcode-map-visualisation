@@ -1,11 +1,10 @@
-import React, { useState } from "react";
-import { Alert, Modal, StyleSheet, Text, Pressable, View } from "react-native";
+import React from "react";
+import { Modal, StyleSheet, Text, Pressable, View } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../reducers";
 import { handleInvalidSearch } from "../actions";
 
 const InvalidSearchAlert = () => {
-  const [modalVisible, setModalVisible] = useState(false);
   const invalidSearch: boolean = useSelector(
     (state: RootState) => state.invalidSearch
   );

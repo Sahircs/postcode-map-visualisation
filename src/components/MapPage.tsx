@@ -6,7 +6,6 @@ import {
   Button,
   TextInput,
   SafeAreaView,
-  KeyboardAvoidingView,
 } from "react-native";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useSelector, useDispatch } from "react-redux";
@@ -37,13 +36,15 @@ const MapPage = () => {
     (state: RootState) => state.centerZoomPoint
   );
   const fetched: boolean = useSelector((state: RootState) => state.fetched);
+  // Main HashMap to display Markers on Map
   const dataHashMap: MapDataType = useSelector(
     (state: RootState) => state.dataHashMap
   );
-  const filter: string | null = useSelector((state: RootState) => state.filter);
+  // For Seach feature
   const searchPostcodeMap: SearchMap | null = useSelector(
     (state: RootState) => state.searchPostcodeMap
   );
+  const filter: string | null = useSelector((state: RootState) => state.filter);
   const searchText: string = useSelector(
     (state: RootState) => state.searchText
   );
@@ -59,6 +60,7 @@ const MapPage = () => {
 
   useEffect(() => {
     if (!fetched && !dataHashMap) {
+      // For main HashMap
       const dataMap: MapDataType = new Map([
         ["N", []],
         ["NW", []],
@@ -69,7 +71,7 @@ const MapPage = () => {
         ["W", []],
         ["WC", []],
       ]);
-
+      // For HashMap used in Search Feature
       const mapSearch: SearchMap = new Map([
         ["N", null],
         ["NW", null],
@@ -109,8 +111,10 @@ const MapPage = () => {
               pinColor: "dodgerblue",
             };
 
+            // Key for a particular area - e.g. NW (North-West)
             let mapKey = "";
 
+            // Checks made to get relevant Map key based on postcode
             if (name[1] == "E" || name[1] == "W" || name[1] == "C") {
               mapKey = name.substring(0, 2);
             } else {
@@ -120,6 +124,7 @@ const MapPage = () => {
             dataMap.set(mapKey, [...dataMap.get(mapKey)!, postcodeMarkerObj]);
 
             if (!mapSearch.get(mapKey)) {
+              // Initial Map
               mapSearch.set(
                 mapKey,
                 new Map([
@@ -127,6 +132,7 @@ const MapPage = () => {
                 ])
               );
             } else {
+              // Adding onto existing Map
               const updatedMap: Map<string, LatLng> = new Map([
                 ...mapSearch.get(mapKey)!,
                 [postcodeInfo.properties["Name"], arrayOfLocations[0]],
@@ -136,6 +142,7 @@ const MapPage = () => {
             }
           }
 
+          // Set States once all data fetched
           dispatch(mapInitialise(dataMap));
           dispatch(updateSearchMap(mapSearch));
           dispatch(dataFetched());
@@ -148,6 +155,7 @@ const MapPage = () => {
     zoomInBySearch: boolean
   ) => {
     if (zoomInBySearch) {
+      // Zoom via search bar is higher (than by clicking on Marker) - due to no pop-up information
       dispatch(
         zoomIn({
           ...markerCoords!,
@@ -169,6 +177,7 @@ const MapPage = () => {
   const searchTextChange = (text: string) => {
     dispatch(handleTextChange(text));
 
+    // Disabling submit Button if text == "" (/null)
     if (text && buttonDisable) {
       dispatch(handleBtnDisable(false));
     } else if (!text) {
@@ -179,6 +188,7 @@ const MapPage = () => {
   const handlePostcodeSearch = () => {
     let mapKey: string | null = null;
 
+    // Checking if possibly correct Area (e.g. N/NW/SW...)
     if (searchText[1] == "E" || searchText[1] == "W" || searchText[1] == "C") {
       mapKey = searchText.substring(0, 2);
     } else if (
@@ -192,6 +202,7 @@ const MapPage = () => {
       return;
     }
 
+    // If possibly correct area -> checking if postcode contained in HashMap
     if (searchPostcodeMap?.get(mapKey)?.has(searchText)!) {
       handleLocationZoom(
         searchPostcodeMap?.get(mapKey)?.get(searchText)!,
@@ -217,10 +228,7 @@ const MapPage = () => {
   if (!fetched || !dataHashMap) {
     return (
       <View style={styles.container}>
-        {/* <Text>Data being fetched...</Text> */}
-        <Text>{filter ? filter : "No Filter Applied"}</Text>
-        <Text>{fetched ? fetched : "Still Fetching..."}</Text>
-        <Text>{dataHashMap ? "Map initialised" : "Not initialised"}</Text>
+        <Text>Data being fetched...</Text>
       </View>
     );
   } else {
@@ -228,6 +236,7 @@ const MapPage = () => {
     let areaSpecificData: PostcodeMarkerData[] | null = null;
 
     if (filter) {
+      // If filter exists -> can get area of postcodes from HashMap to simplify it
       areaSpecificData = dataHashMap.get(filter)!;
     }
 
@@ -335,7 +344,6 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    // alignContent: "space-around",
   },
   headerContainer: {
     width: "100%",
@@ -346,7 +354,6 @@ const styles = StyleSheet.create({
     marginVertical: 30,
     height: 1,
     width: "80%",
-    // backgroundColor: "dodgerblue",
     backgroundColor: "black",
   },
   searchContainer: {
@@ -355,7 +362,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-evenly",
-    marginBottom: 35, // 40 || 20
+    marginBottom: 35,
   },
   searchText: {
     height: 45,

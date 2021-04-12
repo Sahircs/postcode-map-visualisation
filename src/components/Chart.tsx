@@ -26,8 +26,10 @@ const ScatterChart = ({ postcodeMapData, dispatch }: Props) => {
   const areaLabels: string[] = [];
   const numOfPostcodesByArea: number[] = [];
 
+  // Array of areas
   const areaKeys = Array.from(postcodeMapData!.keys());
 
+  // Array of no. of postcodes by Area
   areaKeys.map((area) => {
     areaLabels.push(area);
     numOfPostcodesByArea.push(postcodeMapData?.get(area)?.length!);
@@ -43,6 +45,7 @@ const ScatterChart = ({ postcodeMapData, dispatch }: Props) => {
     legend: ["Scatter Chart for Postcode distribution by Area"],
   };
 
+  // Styling
   const chartConfig = {
     backgroundGradientFrom: "#1E2923",
     backgroundGradientFromOpacity: 0.15,
@@ -54,7 +57,6 @@ const ScatterChart = ({ postcodeMapData, dispatch }: Props) => {
 
   const handleDataPointClicked = (data: DataPoint) => {
     dispatch(updateFilter(areaLabels[data.index]));
-    dispatch(dataFetched());
   };
 
   return (
@@ -77,7 +79,7 @@ const Chart = () => {
   const dataHashMap: MapDataType = useSelector(
     (state: RootState) => state.dataHashMap
   );
-  const filter: string = useSelector((state: RootState) => state.filter);
+  const filter: string | null = useSelector((state: RootState) => state.filter);
   const dispatch = useDispatch();
 
   return (
