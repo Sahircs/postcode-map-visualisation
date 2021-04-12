@@ -8,7 +8,7 @@ Used react-navigation for the Navigation Bars
 
 <br />
 
----
+
 
 ## Map Page
 
@@ -18,7 +18,7 @@ Used react-navigation for the Navigation Bars
 
 <br />
 
----
+
 
 ## Chart Page
 
@@ -27,7 +27,7 @@ Used react-navigation for the Navigation Bars
 
 <br />
 
----
+
 
 ## Technologies Utilised:
 
