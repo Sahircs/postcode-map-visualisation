@@ -2,9 +2,6 @@
 
 Mobile App that displays London Postcodes on a Map by Area and a Chart that dislays the distribution of Postcodes by Area.
 
-Used react-navigation for the Navigation Bars
-
-> All Packages were installed using npm
 
 <br />
 
@@ -41,3 +38,5 @@ Used react-navigation for the Navigation Bars
 - react-native-maps
 - react-native-chart-kit
 - Google Maps API
+
+> All Packages/Libraries were installed using npm
