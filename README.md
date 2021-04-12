@@ -9,7 +9,6 @@ Used react-navigation for the Navigation Bars
 <br />
 
 
-
 ## Map Page
 
 - Displayed Map with several Markers representing individual locations within a certain Postcode
@@ -19,14 +18,12 @@ Used react-navigation for the Navigation Bars
 <br />
 
 
-
 ## Chart Page
 
 - Displayed a Line Chart to represent to distribution of postcodes by Area
 - Clicking on a Datapoint (/Area) would filter the Map to display only locations within that Area
 
 <br />
-
 
 
 ## Technologies Utilised:
