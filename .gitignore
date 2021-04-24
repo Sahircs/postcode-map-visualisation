@@ -1,3 +1,4 @@
 .expo/
 .expo-shared
 node_modules/
+.DS_Store
