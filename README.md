@@ -2,15 +2,13 @@
 
 Mobile App that displays London Postcodes on a Map by Area and a Chart that dislays the distribution of Postcodes by Area.
 
-Used react-navigation for the Navigation Bars
+**App has been published to Expo - [postcode-map-visualisation](https://expo.io/@sahir-tech/projects/postcode-map-visualisation)**
 
-> All Packages were installed using npm
 
 <br />
 
----
 
-### Map Page
+## Map Page
 
 - Displayed Map with several Markers representing individual locations within a certain Postcode
 - Search Bar to allow searching for a particular postcode - if valid it would zoom in on that location
@@ -18,7 +16,6 @@ Used react-navigation for the Navigation Bars
 
 <br />
 
----
 
 ## Chart Page
 
@@ -27,7 +24,6 @@ Used react-navigation for the Navigation Bars
 
 <br />
 
----
 
 ## Technologies Utilised:
 
@@ -44,3 +40,5 @@ Used react-navigation for the Navigation Bars
 - react-native-maps
 - react-native-chart-kit
 - Google Maps API
+
+> All Packages/Libraries were installed using npm
