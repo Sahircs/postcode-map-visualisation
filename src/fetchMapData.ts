@@ -1,12 +1,10 @@
-import { MapDataType, LatLng, PostcodeMarkerData } from "./src/types";
-import { useSelector, useDispatch } from "react-redux";
-import { RootState } from "./src/reducers";
-import { dataFetched, mapInitialise } from "./src/actions";
+import { useDispatch } from "react-redux";
+import { MapDataType, LatLng, PostcodeMarkerData, SearchMap } from "./types";
+import { mapInitialise, updateSearchMap } from "./actions";
 
-// const fetched = useSelector((state: RootState) => state.fetched);
-// const initialiseMap = useSelector((state: RootState) => state.initialiseMap);
 const dispatch = useDispatch();
 
+// For main HashMap
 const dataMap: MapDataType = new Map([
   ["N", []],
   ["NW", []],
@@ -17,15 +15,31 @@ const dataMap: MapDataType = new Map([
   ["W", []],
   ["WC", []],
 ]);
+// For HashMap used in Search Feature
+const mapSearch: SearchMap = new Map([
+  ["N", null],
+  ["NW", null],
+  ["SW", null],
+  ["SE", null],
+  ["E", null],
+  ["EC", null],
+  ["W", null],
+  ["WC", null],
+]);
 
-export const fetchMapData = () => {
+export const fetchMapData = async () => {
+  const data: any = await fetch(
+    "https://raw.githubusercontent.com/sjwhitworth/london_geojson/master/london_postcodes.json"
+  );
+  console.log(data);
+  console.log(typeof data);
+
+  /*
   fetch(
     "https://raw.githubusercontent.com/sjwhitworth/london_geojson/master/london_postcodes.json"
   )
     .then((response) => response.json())
     .then((data) => {
-      // console.log("----------------------------------------------");
-
       for (let index in data.features) {
         let postcodeInfo = data.features[index];
         let name: string = postcodeInfo.properties["Name"];
@@ -59,11 +73,10 @@ export const fetchMapData = () => {
         let currentMapValue = dataMap.get(mapKey);
         dataMap.set(mapKey, [...currentMapValue!, postcodeMarkerObj]);
       }
-      // console.log("----------------------------------------------");
 
       dispatch(mapInitialise(dataMap));
-      dispatch(dataFetched());
+      dispatch(updateSearchMap(mapSearch));
       console.log(dataMap);
     });
-  // .then(() => console.log(initialiseMap));
+    */
 };

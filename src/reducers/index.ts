@@ -7,6 +7,7 @@ import searchPostcodeMap from "./searchPostcodeMap";
 import searchTextReducer from "./searchText";
 import searchButtonDisableReducer from "./searchButtonDisable";
 import invalidSearchReducer from "./invalidSearch";
+import blobMapReducer from "./blobMap";
 
 const allReducers = combineReducers({
   fetched: fetchedReducer,
@@ -17,6 +18,7 @@ const allReducers = combineReducers({
   searchText: searchTextReducer,
   buttonDisable: searchButtonDisableReducer,
   invalidSearch: invalidSearchReducer,
+  blobMap: blobMapReducer,
 });
 
 export default allReducers;

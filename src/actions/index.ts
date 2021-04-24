@@ -85,3 +85,12 @@ export const handleInvalidSearch = (searchInvalid: boolean) => {
     },
   };
 };
+
+export const initaliseBlobMap = (map: Map<string, any[]>) => {
+  return {
+    type: "initialiseMap",
+    payload: {
+      data: map,
+    },
+  };
+};

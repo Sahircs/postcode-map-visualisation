@@ -6,12 +6,11 @@ import { createMaterialBottomTabNavigator } from "@react-navigation/material-bot
 import { Feather, FontAwesome } from "@expo/vector-icons";
 // Components
 import MapPage from "./src/components/MapPage";
-import Chart from "./src/components/Chart";
-// redux-stuff
+import ChartPage from "./src/components/ChartPage";
+// Redux
 import { createStore, compose } from "redux";
 import { Provider } from "react-redux";
 import allReducers from "./src/reducers";
-// import { fetchMapData } from "./fetchMapData";
 
 // STORE
 const composeEnhancers = // for redux-dev-tool
@@ -38,7 +37,7 @@ const App = () => {
           ></Tab.Screen>
           <Tab.Screen
             name="chart"
-            component={Chart}
+            component={ChartPage}
             options={{
               tabBarLabel: "Chart",
               tabBarIcon: ({ color }) => (

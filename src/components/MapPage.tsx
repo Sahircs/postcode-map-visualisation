@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,7 +10,8 @@ import {
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../reducers";
-import MapView, { PROVIDER_GOOGLE, Marker } from "react-native-maps";
+import MapView, { PROVIDER_GOOGLE, Marker, Geojson } from "react-native-maps";
+
 import {
   MapDataType,
   LatLng,
@@ -28,6 +29,7 @@ import {
   handleTextChange,
   handleBtnDisable,
   handleInvalidSearch,
+  initaliseBlobMap,
 } from "../actions";
 import InvalidSearchAlert from "./InvalidSearchAlert";
 
@@ -40,7 +42,7 @@ const MapPage = () => {
   const dataHashMap: MapDataType = useSelector(
     (state: RootState) => state.dataHashMap
   );
-  // For Seach feature
+  // For Search feature
   const searchPostcodeMap: SearchMap | null = useSelector(
     (state: RootState) => state.searchPostcodeMap
   );
@@ -54,99 +56,119 @@ const MapPage = () => {
   const invalidSearch: boolean = useSelector(
     (state: RootState) => state.invalidSearch
   );
+  const blobMap: Map<string, any[]> | null = useSelector(
+    (state: RootState) => state.blobMap as Map<string, any[]> | null
+  );
   const dispatch = useDispatch();
 
-  console.log("----------------------------------------------");
+  let data: any = null;
+
+  const fetchMapData = async () => {
+    // For main HashMap
+    const dataMap: MapDataType = new Map([
+      ["N", []],
+      ["NW", []],
+      ["SW", []],
+      ["SE", []],
+      ["E", []],
+      ["EC", []],
+      ["W", []],
+      ["WC", []],
+    ]);
+    // For HashMap used in Search Feature
+    const mapSearch: SearchMap = new Map([
+      ["N", null],
+      ["NW", null],
+      ["SW", null],
+      ["SE", null],
+      ["E", null],
+      ["EC", null],
+      ["W", null],
+      ["WC", null],
+    ]);
+    // Map used to display full blobs for Area filtered
+    const tempblobMap = new Map<string, any[]>([
+      ["N", []],
+      ["NW", []],
+      ["SW", []],
+      ["SE", []],
+      ["E", []],
+      ["EC", []],
+      ["W", []],
+      ["WC", []],
+    ]);
+
+    const response: any = await fetch(
+      "https://raw.githubusercontent.com/sjwhitworth/london_geojson/master/london_postcodes.json"
+    );
+
+    data = await response.json();
+
+    for (let index in data.features) {
+      const postcodeInfo = data.features[index];
+      const name: string = postcodeInfo.properties["Name"];
+      const arrayOfLocations: LatLng[] = [];
+      const coordinates = postcodeInfo.geometry.coordinates[0];
+
+      for (const index in coordinates) {
+        const coord = coordinates[index];
+        arrayOfLocations.push({
+          latitude: parseFloat(coord[1]),
+          longitude: parseFloat(coord[0]),
+        });
+        // break added as every single location is unecessary & makes app slower
+        break; // Comment this line to see markers for every single location in every single postcode in London
+      }
+
+      const postcodeMarkerObj: PostcodeMarkerData = {
+        coords: arrayOfLocations,
+        title: postcodeInfo.properties["Name"],
+        description: postcodeInfo.properties["Description"],
+        pinColor: "dodgerblue",
+      };
+
+      // Key for a particular area - e.g. NW (North-West)
+      let mapKey = "";
+
+      // Checks made to get relevant Map key based on postcode
+      if (name[1] == "E" || name[1] == "W" || name[1] == "C") {
+        mapKey = name.substring(0, 2);
+      } else {
+        mapKey = name.substring(0, 1);
+      }
+
+      dataMap.set(mapKey, [...dataMap.get(mapKey)!, postcodeMarkerObj]);
+
+      if (!mapSearch.get(mapKey)) {
+        // Initial Map
+        mapSearch.set(
+          mapKey,
+          new Map([[postcodeInfo.properties["Name"], arrayOfLocations[0]]])
+        );
+      } else {
+        // Adding onto existing Map
+        const updatedMap: Map<string, LatLng> = new Map([
+          ...mapSearch.get(mapKey)!,
+          [postcodeInfo.properties["Name"], arrayOfLocations[0]],
+        ]);
+
+        mapSearch.set(mapKey, updatedMap);
+      }
+
+      // Updating Blob Map
+      tempblobMap.set(mapKey, [...tempblobMap.get(mapKey)!, postcodeInfo]);
+    }
+
+    // Setting required states
+    dispatch(mapInitialise(dataMap));
+    dispatch(updateSearchMap(mapSearch));
+    dispatch(dataFetched());
+    dispatch(initaliseBlobMap(tempblobMap));
+  };
 
   useEffect(() => {
     if (!fetched && !dataHashMap) {
-      // For main HashMap
-      const dataMap: MapDataType = new Map([
-        ["N", []],
-        ["NW", []],
-        ["SW", []],
-        ["SE", []],
-        ["E", []],
-        ["EC", []],
-        ["W", []],
-        ["WC", []],
-      ]);
-      // For HashMap used in Search Feature
-      const mapSearch: SearchMap = new Map([
-        ["N", null],
-        ["NW", null],
-        ["SW", null],
-        ["SE", null],
-        ["E", null],
-        ["EC", null],
-        ["W", null],
-        ["WC", null],
-      ]);
-
-      fetch(
-        "https://raw.githubusercontent.com/sjwhitworth/london_geojson/master/london_postcodes.json"
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          for (let index in data.features) {
-            let postcodeInfo = data.features[index];
-            let name: string = postcodeInfo.properties["Name"];
-            let arrayOfLocations: LatLng[] = [];
-            let coordinates = postcodeInfo.geometry.coordinates[0];
-
-            for (let index in coordinates) {
-              let coord = coordinates[index];
-              arrayOfLocations.push({
-                latitude: parseFloat(coord[1]),
-                longitude: parseFloat(coord[0]),
-              });
-              // break added as every single location is unecessary & makes app slower
-              break; // Comment this line to see markers for every single location in every single postcode in London
-            }
-
-            let postcodeMarkerObj: PostcodeMarkerData = {
-              coords: arrayOfLocations,
-              title: postcodeInfo.properties["Name"],
-              description: postcodeInfo.properties["Description"],
-              pinColor: "dodgerblue",
-            };
-
-            // Key for a particular area - e.g. NW (North-West)
-            let mapKey = "";
-
-            // Checks made to get relevant Map key based on postcode
-            if (name[1] == "E" || name[1] == "W" || name[1] == "C") {
-              mapKey = name.substring(0, 2);
-            } else {
-              mapKey = name.substring(0, 1);
-            }
-
-            dataMap.set(mapKey, [...dataMap.get(mapKey)!, postcodeMarkerObj]);
-
-            if (!mapSearch.get(mapKey)) {
-              // Initial Map
-              mapSearch.set(
-                mapKey,
-                new Map([
-                  [postcodeInfo.properties["Name"], arrayOfLocations[0]],
-                ])
-              );
-            } else {
-              // Adding onto existing Map
-              const updatedMap: Map<string, LatLng> = new Map([
-                ...mapSearch.get(mapKey)!,
-                [postcodeInfo.properties["Name"], arrayOfLocations[0]],
-              ]);
-
-              mapSearch.set(mapKey, updatedMap);
-            }
-          }
-
-          // Set States once all data fetched
-          dispatch(mapInitialise(dataMap));
-          dispatch(updateSearchMap(mapSearch));
-          dispatch(dataFetched());
-        });
+      fetchMapData();
     }
   }, []);
 
@@ -187,27 +209,38 @@ const MapPage = () => {
 
   const handlePostcodeSearch = () => {
     let mapKey: string | null = null;
+    let pcText = searchText.toUpperCase().replaceAll(/\s/g, "");
 
     // Checking if possibly correct Area (e.g. N/NW/SW...)
-    if (searchText[1] == "E" || searchText[1] == "W" || searchText[1] == "C") {
-      mapKey = searchText.substring(0, 2);
-    } else if (
-      searchText[0] == "N" ||
-      searchText[0] == "E" ||
-      searchText[0] == "W"
-    ) {
-      mapKey = searchText.substring(0, 1);
+    if (pcText[1] == "E" || pcText[1] == "W" || pcText[1] == "C") {
+      mapKey = pcText.substring(0, 2);
+    } else if (pcText[0] == "N" || pcText[0] == "E" || pcText[0] == "W") {
+      mapKey = pcText.substring(0, 1);
     } else {
       submitBtnReset(true);
       return;
     }
 
+    // Convert full postcode to shorthand: (specific to data being fetched)
+    // 2: N, E, W
+    const re2 = /^[A-Z]\d$/;
+    // 3: NW, SW, SE
+    const re3 = /^[A-Z][A-Z]\d$/;
+    // 4: EC, WC
+    const re4 = /^[A-Z][A-Z]\d[A-Z]$/;
+
+    if (pcText.length >= 2 && re2.test(pcText.substr(0, 2))) {
+      pcText = pcText.substr(0, 2);
+    } else if (pcText.length >= 4 && re4.test(pcText.substr(0, 4))) {
+      // Testing 4 chars before 3 due to overlap in data coordinates
+      pcText = pcText.substr(0, 4);
+    } else if (pcText.length >= 3 && re3.test(pcText.substr(0, 3))) {
+      pcText = pcText.substr(0, 3);
+    }
+
     // If possibly correct area -> checking if postcode contained in HashMap
-    if (searchPostcodeMap?.get(mapKey)?.has(searchText)!) {
-      handleLocationZoom(
-        searchPostcodeMap?.get(mapKey)?.get(searchText)!,
-        true
-      );
+    if (searchPostcodeMap?.get(mapKey)?.has(pcText)!) {
+      handleLocationZoom(searchPostcodeMap?.get(mapKey)?.get(pcText)!, true);
       submitBtnReset(false);
     } else {
       submitBtnReset(true);
@@ -225,7 +258,8 @@ const MapPage = () => {
     }
   };
 
-  if (!fetched || !dataHashMap) {
+  if (!fetched || !dataHashMap || !blobMap) {
+    // add geo-data state -> add blobs on Map
     return (
       <View style={styles.container}>
         <Text>Data being fetched...</Text>
@@ -235,9 +269,21 @@ const MapPage = () => {
     const areaKeys = Array.from(dataHashMap.keys());
     let areaSpecificData: PostcodeMarkerData[] | null = null;
 
+    const blobData: any = {
+      type: "FeatureCollection",
+      features: [],
+    };
+
     if (filter) {
       // If filter exists -> can get area of postcodes from HashMap to simplify it
       areaSpecificData = dataHashMap.get(filter)!;
+      // Add location-specific data blobData
+      blobData.features = blobMap.get(filter);
+    } else {
+      // Add all locations to blobData
+      blobMap.forEach((value) => {
+        blobData.features = blobData.features.concat(value);
+      });
     }
 
     return (
@@ -253,7 +299,8 @@ const MapPage = () => {
             style={styles.searchText}
             placeholder="Enter a Postcode to Search Map"
             placeholderTextColor="grey"
-            onChangeText={searchTextChange}
+            onChangeText={(text) => searchTextChange(text)}
+            // onChangeText={searchTextChange}
             value={searchText}
           />
           <View style={{ height: -5, marginTop: 10 }}>
@@ -269,7 +316,7 @@ const MapPage = () => {
         {/* Text to display current Filter being applied */}
         <Text>
           {filter
-            ? "Map currently is filtered by Area: " + filter
+            ? `Map currently is filtered by Area: ${filter}`
             : "Map currently has no filter applied"}
         </Text>
         {/* Buttons to reset the Zoom and filter */}
@@ -294,6 +341,12 @@ const MapPage = () => {
             zoomEnabled
             zoomTapEnabled
           >
+            <Geojson
+              geojson={blobData as any}
+              strokeColor="red"
+              fillColor="green"
+              strokeWidth={2}
+            />
             {/* Display Markers */}
             {areaSpecificData
               ? areaSpecificData!.map((postcodeObj) => {

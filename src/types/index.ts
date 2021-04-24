@@ -61,15 +61,22 @@ export interface InitialiseSearchMap {
 }
 
 export interface SearchTextActionType {
-  type: string,
+  type: string;
   payload: {
-    data: string 
-  }
+    data: string;
+  };
 }
 
 export interface ButtonDisableActionType {
-  type: string,
+  type: string;
   payload: {
-    data: boolean
-  }
+    data: boolean;
+  };
+}
+
+export interface blobType {
+  type: string;
+  payload: {
+    data: Map<string, any[]> | null;
+  };
 }
