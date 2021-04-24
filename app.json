@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "postcode-visualisation",
-    "slug": "postcode-visualisation",
+    "name": "postcode-map-visualisation",
+    "slug": "postcode-map-visualisation",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./src/assets/icon.png",
@@ -13,7 +13,9 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true
     },
@@ -25,6 +27,8 @@
     },
     "web": {
       "favicon": "./src/assets/favicon.png"
-    }
+    },
+    "description": "Mobile App that displays London Postcodes on a Map by Area and a Chart that displays the distribution of Postcodes by Area. \nUsed React-Native/Expo, React, Redux, TypeScript.",
+    "githubUrl": "https://github.com/Sahircs/postcode-map-visualisation"
   }
 }
